@@ -13,9 +13,9 @@ import random
 
 if __name__ == "__main__":
     calModel = load_model("calModel.h5")
-    
-    good_examples_dir = "/home/jianan/Projects/calcification/data/good_data"
-    bad_examples_dir = "/home/jianan/Projects/calcification/data/bad_data"
+
+    good_examples_dir = ".\\data\\good_data"
+    bad_examples_dir = ".\\data\\bad_data"
     
     good_examples = os.listdir(good_examples_dir)
     print(good_examples)
@@ -25,8 +25,9 @@ if __name__ == "__main__":
     for i in range(10):
         X = np.loadtxt(os.path.join(good_examples_dir, good_examples[i])) / 4096.0
         X = X[np.newaxis, :, :, np.newaxis]
-        print(calModel.predict(X))
-        
+        print("good: " + str(calModel.predict(X)))
+
+    for i in range(10):
         X = np.loadtxt(os.path.join(bad_examples_dir, bad_examples[i])) / 4096.0
         X = X[np.newaxis, :, :, np.newaxis]
-        print(calModel.predict(X))
+        print("bad: " + str(calModel.predict(X)))
