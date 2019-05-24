@@ -18,15 +18,19 @@ if __name__ == "__main__":
     bad_examples_dir = ".\\data\\bad_data"
     
     good_examples = os.listdir(good_examples_dir)
+    random.shuffle(good_examples)
     print(good_examples)
-    print(good_examples)
+
     bad_examples = os.listdir(bad_examples_dir)
+    random.shuffle(bad_examples)
+    print(bad_examples)
     
     for i in range(10):
         X = np.loadtxt(os.path.join(good_examples_dir, good_examples[i])) / 4096.0
         X = X[np.newaxis, :, :, np.newaxis]
         print("good: " + str(calModel.predict(X)))
 
+    print("----------------------------")
     for i in range(10):
         X = np.loadtxt(os.path.join(bad_examples_dir, bad_examples[i])) / 4096.0
         X = X[np.newaxis, :, :, np.newaxis]
