@@ -1,15 +1,16 @@
 import keras.backend as K
-from keras.layers import Conv2D, Input, Flatten, Dense, Dropout
+from keras.layers import Conv2D, Input, Flatten, Dense, Dropout, MaxPooling2D
 from keras.models import Model
 from keras.callbacks import LearningRateScheduler
+from keras import regularizers
 import os
 import random
 import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-good_examples_dir = ".\\data\\good_data"
-bad_examples_dir = ".\\data\\bad_data"
+good_examples_dir = "./data/good_data_extend"
+bad_examples_dir = "./data/bad_data_extend"
 
 
 def load_data(data_files, input_shape):
@@ -52,15 +53,23 @@ def scheduler(epoch):
 def calModel(input_shape):
     input = Input(input_shape, name='input')
 
-    conv1 = Conv2D(8, (3, 3), strides=(1, 1), padding='same', activation='relu', name='conv1')(input)
+    conv1 = Conv2D(32, (3, 3), strides=(1, 1), padding='valid', activation='relu', name='conv1')(input)
+    
+    #conv2 = Conv2D(32, (5, 5), strides=(2, 2), padding='valid', activation='relu', name='conv2')(conv1)
+    
+    pd1 = MaxPooling2D(pool_size=(2, 2), padding = 'valid', name = 'pd1')(conv1)
 
-    conv2 = Conv2D(16, (7, 7), strides=(2, 2), padding="valid", activation='relu', name='conv2')(conv1)
+    conv2 = Conv2D(32, (3, 3), strides=(1, 1), padding="valid", activation='relu', name='conv2')(pd1)
 
+    pd2 = MaxPooling2D(pool_size=(2, 2), padding = 'valid', name = 'pd2')(conv2)
+    
     #conv3 = Conv2D(32, (11, 11), strides=(3, 3), padding="valid", activation='relu', name='conv3')(conv2)
 
-    fc = Flatten()(conv2)
-    dp = Dropout(0.2, seed=1000)(fc)
-    output = Dense(1, activation='sigmoid', name='output')(dp)
+    fl = Flatten()(pd2)
+    # dp = Dropout(0.2, seed=1000)(fc)
+    fc1 = Dense(128, activation='relu', name='fc1')(fl)
+    
+    output = Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01), name='output')(fc1)
 
     model = Model(inputs=input, outputs=output, name='calModel')
 
@@ -100,7 +109,7 @@ if __name__ == "__main__":
 
     print("all data counts: " + str(data_sum))
     print("train data counts: " + str(len(train_data)))
-    print("train data counts: " + str(len(valid_data)))
+    print("valid data counts: " + str(len(valid_data)))
     print("test data counts: " + str(len(test_data)))
 
     calModel.compile('adam', loss='binary_crossentropy', metrics=['accuracy'])
@@ -108,7 +117,7 @@ if __name__ == "__main__":
     history = calModel.fit_generator(generator=data_generator(train_data, input_shape, batch_size),
                                      steps_per_epoch=train_steps_per_epoch, epochs=150,
                                      validation_data=data_generator(valid_data, input_shape, batch_size),
-                                     validation_steps=valid_steps_per_epoch)
+                                     validation_steps=valid_steps_per_epoch, callbacks = [reduce_lr])
     calModel.save("calModel.h5")
 
     ### draw loss and accuracy ###
@@ -134,16 +143,16 @@ if __name__ == "__main__":
     plt.show()
 
     # lr
-    plt.plot(history.history['lr'])
-    plt.title('model learning rate')
-    plt.ylabel('lr')
-    plt.xlabel('epoch')
-    plt.savefig("lr.png")
-    plt.show()
+#    plt.plot(history.history['lr'])
+#    plt.title('model learning rate')
+#    plt.ylabel('lr')
+#    plt.xlabel('epoch')
+#    plt.savefig("lr.png")
+#    plt.show()
 
     ### evaluate ###
     X_test, Y_test = load_data(valid_data, input_shape)
-    print("model evaluate: " + str(calModel.evaluate(X_test, Y_test, batch_size=8)))
+    #print("model evaluate: " + str(calModel.evaluate(X_test, Y_test, batch_size=8)))
 
     Y_hat = calModel.predict(X_test)
     for i in range(len(Y_test)):
