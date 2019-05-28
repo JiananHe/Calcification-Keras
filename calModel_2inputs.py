@@ -8,8 +8,9 @@ Created on Sat May 25 15:13:56 2019
 
 from keras.preprocessing.image import ImageDataGenerator
 import keras.backend as K
-from keras.layers import Conv2D, Input, Flatten, Dense, Dropout, MaxPooling2D
+from keras.layers import Conv2D, Input, Flatten, Dense, Dropout, MaxPooling2D, concatenate
 from keras.models import Model
+from keras.utils import plot_model
 from keras.callbacks import LearningRateScheduler
 from keras import regularizers
 from keras import optimizers
@@ -24,6 +25,7 @@ good_examples_dir = "./data/good_data_extend"
 bad_examples_dir = "./data/bad_data_extend"
 input_shape = (100, 100, 1)
 batch_size = 16
+vector_length = (9, 9, 1)
 
 
 def load_data():
@@ -83,7 +85,7 @@ def load_data():
     return X_train, Y_train, X_valid, Y_valid
 
     
-def calModel(input_shape):
+def calModel(input_shape, vector_length):
     input = Input(input_shape, name='input')
 
     conv1 = Conv2D(16, (3, 3), strides=(1, 1), padding='valid', activation='relu', name='conv1')(input)
@@ -94,43 +96,46 @@ def calModel(input_shape):
 
     conv3 = Conv2D(32, (3, 3), strides=(1, 1), padding="same", activation='relu', name='conv3')(pl1)
 
-    pl2 = MaxPooling2D(pool_size=(2, 2), padding = 'valid', name = 'pl2')(conv3)
+    pl2 = MaxPooling2D(pool_size=(2, 2), padding='valid', name = 'pl2')(conv3)
     
     conv4 = Conv2D(32, (3, 3), strides=(1, 1), padding="same", activation='relu', name='conv4')(pl2)
     
-    pl3 = MaxPooling2D(pool_size=(2, 2), padding = 'valid', name = 'pl3')(conv4)
-    
-    #conv3 = Conv2D(32, (11, 11), strides=(3, 3), padding="valid", activation='relu', name='conv3')(conv2)
+    # pl3 = MaxPooling2D(pool_size=(2, 2), padding = 'valid', name = 'pl3')(conv4)
 
-    fl = Flatten()(pl3)
+    conv5 = Conv2D(16, (3, 3), strides=(2, 2), padding='valid', activation='relu', name='conv5')(conv4)
+
+    conv6 = Conv2D(1, (3, 3), strides=(1, 1), padding='valid', activation='relu', name='conv6')(conv5)
+
+    feature_input = Input(vector_length, name='feature_input')
+    con_layer = concatenate([conv6, feature_input])
+
+    fl = Flatten()(con_layer)
     # dp = Dropout(0.2, seed=1000)(fc)
     fc1 = Dense(256, activation='relu', name='fc1')(fl)
     dt1 = Dropout(0.1)(fc1)
-    
-    fc2 = Dense(128, activation='relu', name='fc2')(dt1)
-    dt2 = Dropout(0.1)(fc2)
-    
-    output = Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01), name='output')(dt2)
 
-    model = Model(inputs=input, outputs=output, name='calModel')
+    output = Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01), name='output')(dt1)
+
+    model = Model(inputs=[input, feature_input], outputs=output, name='calModel')
 
     return model
 
     
 if __name__ == "__main__":
     # load data
-    X_train, Y_train, X_valid, Y_valid = load_data()
-    
-    # data generator
-    train_datagen = ImageDataGenerator()
-    valid_datagen = ImageDataGenerator()
-    
-    train_generator = train_datagen.flow(X_train, Y_train, batch_size=batch_size)
-    valid_generator = valid_datagen.flow(X_valid, Y_valid, batch_size=batch_size)
+    # X_train, Y_train, X_valid, Y_valid = load_data()
+    #
+    # # data generator
+    # train_datagen = ImageDataGenerator()
+    # valid_datagen = ImageDataGenerator()
+    #
+    # train_generator = train_datagen.flow(X_train, Y_train, batch_size=batch_size)
+    # valid_generator = valid_datagen.flow(X_valid, Y_valid, batch_size=batch_size)
     
     # load model
-    calModel = calModel(input_shape)
+    calModel = calModel(input_shape, vector_length)
     calModel.summary()
+    plot_model(calModel, to_file='model2.png')
     
     # train
 #    train_steps_per_epoch = math.ceil(len(X_train) / batch_size)

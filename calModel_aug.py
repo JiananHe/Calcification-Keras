@@ -10,6 +10,7 @@ from keras.preprocessing.image import ImageDataGenerator
 import keras.backend as K
 from keras.layers import Conv2D, Input, Flatten, Dense, Dropout, MaxPooling2D
 from keras.models import Model
+from keras.utils import plot_model
 from keras.callbacks import LearningRateScheduler
 from keras import regularizers
 from keras import optimizers
@@ -119,58 +120,59 @@ def calModel(input_shape):
     
 if __name__ == "__main__":
     # load data
-    X_train, Y_train, X_valid, Y_valid = load_data()
-    
-    # data generator
-    train_datagen = ImageDataGenerator()
-    valid_datagen = ImageDataGenerator()
-    
-    train_generator = train_datagen.flow(X_train, Y_train, batch_size=batch_size)
-    valid_generator = valid_datagen.flow(X_valid, Y_valid, batch_size=batch_size)
+    # X_train, Y_train, X_valid, Y_valid = load_data()
+    #
+    # # data generator
+    # train_datagen = ImageDataGenerator()
+    # valid_datagen = ImageDataGenerator()
+    #
+    # train_generator = train_datagen.flow(X_train, Y_train, batch_size=batch_size)
+    # valid_generator = valid_datagen.flow(X_valid, Y_valid, batch_size=batch_size)
     
     # load model
     calModel = calModel(input_shape)
     calModel.summary()
-    
+    plot_model(calModel, to_file='model.png')
+
     # train
-    train_steps_per_epoch = math.ceil(len(X_train) / batch_size)
-    valid_steps_per_epoch = math.ceil(len(X_valid) / batch_size)
-    
-    #calModel.compile('adam', loss='binary_crossentropy', metrics=['accuracy'])
-    #sgd = optimizers.SGD(lr=0.001, momentum=0.9, decay=1e-04, nesterov=False)
-    calModel.compile(optimizer = 'sgd', loss='mean_squared_error', metrics=['accuracy'])
-    history = calModel.fit_generator(train_generator, steps_per_epoch=train_steps_per_epoch, epochs=300,
-                                     validation_data=valid_generator, validation_steps=valid_steps_per_epoch)
-    
-    calModel.save("calModel.h5")
-
-    ### draw loss and accuracy ###
-    print(history.history.keys())
-    # summarize history for accuracy
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig("accuracy.png")
-    plt.show()
-
-    # summarize history for loss
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig("loss.png")
-    plt.show()
-    
-    # lr
-    plt.plot(history.history['lr'])
-    plt.title('model learning rate')
-    plt.ylabel('lr')
-    plt.xlabel('epoch')
-    plt.savefig("lr.png")
-    plt.show()
+    # train_steps_per_epoch = math.ceil(len(X_train) / batch_size)
+    # valid_steps_per_epoch = math.ceil(len(X_valid) / batch_size)
+    #
+    # #calModel.compile('adam', loss='binary_crossentropy', metrics=['accuracy'])
+    # #sgd = optimizers.SGD(lr=0.001, momentum=0.9, decay=1e-04, nesterov=False)
+    # calModel.compile(optimizer = 'sgd', loss='mean_squared_error', metrics=['accuracy'])
+    # history = calModel.fit_generator(train_generator, steps_per_epoch=train_steps_per_epoch, epochs=300,
+    #                                  validation_data=valid_generator, validation_steps=valid_steps_per_epoch)
+    #
+    # calModel.save("calModel.h5")
+    #
+    # ### draw loss and accuracy ###
+    # print(history.history.keys())
+    # # summarize history for accuracy
+    # plt.plot(history.history['acc'])
+    # plt.plot(history.history['val_acc'])
+    # plt.title('model accuracy')
+    # plt.ylabel('accuracy')
+    # plt.xlabel('epoch')
+    # plt.legend(['train', 'test'], loc='upper left')
+    # plt.savefig("accuracy.png")
+    # plt.show()
+    #
+    # # summarize history for loss
+    # plt.plot(history.history['loss'])
+    # plt.plot(history.history['val_loss'])
+    # plt.title('model loss')
+    # plt.ylabel('loss')
+    # plt.xlabel('epoch')
+    # plt.legend(['train', 'test'], loc='upper left')
+    # plt.savefig("loss.png")
+    # plt.show()
+    #
+    # # lr
+    # plt.plot(history.history['lr'])
+    # plt.title('model learning rate')
+    # plt.ylabel('lr')
+    # plt.xlabel('epoch')
+    # plt.savefig("lr.png")
+    # plt.show()
     
